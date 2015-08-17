@@ -22,6 +22,7 @@ inline void z_change_maxtask_num(zoey_threadpool_t *pool, unsigned int num);
 inline int z_thread_key_create();
 inline void z_thread_key_destroy();
 
+//检测线程池配置参数是否合法
 int z_conf_check(zoey_threadpool_conf_t *conf)
 {
 	if (conf == NULL){
@@ -99,7 +100,7 @@ int z_threadpool_create(zoey_threadpool_t *pool)
 			return -1;
 		}
 	}
-
+	//创建线程池
 	for (; i < pool->threadnum; ++i)
 	{
 		pthread_create(&pid, &attr, z_threadpool_cycle,pool);
@@ -159,13 +160,13 @@ void z_threadpool_cycle(void* argv)
 	sigdelset(&set, SIGSEGV);
 	sigdelset(&set, SIGBUS);
 	
-	if (pthread_setspecific(key,(void*)&exit_flag) != 0){
+	if (pthread_setspecific(key,(void*)&exit_flag) != 0){//设置exit_flag = 0
 		return;
 	}
 	if (pthread_sigmask(SIG_BLOCK, &set, NULL) != 0){
 		return;
 	}
-	while(!exit_flag){
+	while(!exit_flag){         //exit_flag为1时线程退出
 		if (pthread_mutex_lock(&pool->mutex) != 0){  //加锁
 			return;
 		}
@@ -190,7 +191,7 @@ void z_threadpool_cycle(void* argv)
 			return;
 		}
 
-		ptask->handler(ptask->argv);  //执行任务，一般任务函数必须返回0    其他值导致线程退出。
+		ptask->handler(ptask->argv);  //执行任务。
 		free(ptask);
 		ptask = NULL;
 	}
@@ -204,7 +205,7 @@ void z_threadpool_exit_cb(void* argv)
 	unsigned int *lock = argv;
 	unsigned int *pexit_flag = NULL;
 	pexit_flag = (int *)pthread_getspecific(key);
-	*pexit_flag = 1;
+	*pexit_flag = 1;    //将exit_flag置1
 	pthread_setspecific(key, (void*)pexit_flag);
 	*lock = 0;
 }

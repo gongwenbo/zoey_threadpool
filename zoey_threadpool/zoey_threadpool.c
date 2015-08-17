@@ -31,7 +31,7 @@ zoey_threadpool_t* zoey_threadpool_init(zoey_threadpool_conf_t *conf)
 
 		z_task_queue_init(&pool->tasks);
 	
-		if (z_thread_key_create() != 0){
+		if (z_thread_key_create() != 0){//创建一个pthread_key_t，用以访问线程全局变量。
 			free(pool);
 			break;
 		}
@@ -143,7 +143,7 @@ void zoey_set_max_tasknum(zoey_threadpool_t *pool,unsigned int num)
 	if (pthread_mutex_lock(&pool->mutex) != 0){
 		return -1;
 	}
-	z_change_maxtask_num(pool, num);
+	z_change_maxtask_num(pool, num);  //改变最大任务限制
 	pthread_mutex_unlock(&pool->mutex);
 }
 
